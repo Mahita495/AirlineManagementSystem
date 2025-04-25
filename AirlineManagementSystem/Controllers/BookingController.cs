@@ -27,7 +27,7 @@ namespace AirlineManagementSystem.Controllers
             _userRepository = userRepository;
             _logger = logger;
 
-            //Subscribe to booking completed event
+            //Subscribe to booking completed event - test git
             if (_bookingService is BookingService concreteService)
             {
                 concreteService.BookingCompleted += HandleBookingCompleted;

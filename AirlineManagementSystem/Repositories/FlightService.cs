@@ -10,10 +10,13 @@ namespace AirlineManagementSystem.Repositories
 {
     public class FlightService : IFlightService
     {
-        private readonly AppDbContext _context;  // EF Core context for accessing the database
-        private readonly IMapper _mapper;        // AutoMapper for converting between models and DTOs
-        private readonly IConfiguration _config; // Configuration to access connection strings
-        
+        // EF Core context for accessing the database
+        private readonly AppDbContext _context;
+        // AutoMapper for converting between models and DTOs
+        private readonly IMapper _mapper;
+        // Configuration to access connection strings
+
+        private readonly IConfiguration _config; 
 
         // Constructor to initialize the service with required dependencies
         public FlightService(AppDbContext context, IMapper mapper, IConfiguration config)
@@ -23,14 +26,13 @@ namespace AirlineManagementSystem.Repositories
             _config = config;
         }
 
-       
-       
 
-        // Method to get all flights and map them to FlightDto objects
+
+
         /// <summary>
-        /// 
+         //Method to get all flights and map them to FlightDto objects
         /// </summary>
-        /// <returns></returns>
+        /// <returns>List of all flights</returns>
         public async Task<IEnumerable<FlightDto>> GetAllAsync()
         {
             var flights = await _context.Flights.ToListAsync();  // Fetch all flights using EF Core
