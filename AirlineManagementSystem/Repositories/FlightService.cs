@@ -3,6 +3,7 @@ using AirlineManagementSystem.DTOs;
 using AirlineManagementSystem.Models;
 using AutoMapper;
 using Dapper;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,13 +27,6 @@ namespace AirlineManagementSystem.Repositories
             _config = config;
         }
 
-
-
-
-        /// <summary>
-         //Method to get all flights and map them to FlightDto objects
-        /// </summary>
-        /// <returns>List of all flights</returns>
         public async Task<IEnumerable<FlightDto>> GetAllAsync()
         {
             var flights = await _context.Flights.ToListAsync();  // Fetch all flights using EF Core
@@ -75,16 +69,28 @@ namespace AirlineManagementSystem.Repositories
         }
 
         // Method to delete a flight from the database using Dapper (direct SQL query)
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
         public async Task DeleteAsync(int id)
         {
             using var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection"));  // Open a connection to the database using Dapper
             var query = "DELETE FROM Flights WHERE Id = @Id";  // SQL query to delete a flight
             await conn.ExecuteAsync(query, new { Id = id });  // Execute the SQL query asynchronously
         }
+
+        // Method to get flight suggestions based on a search term using EF Core
+        public async Task<IEnumerable<string>> GetFlightSuggestionsAsync(string term)
+        {
+            var flights = await _context.Flights
+                .Where(f => f.FlightNumber.Contains(term))
+                .Select(f => f.FlightNumber)
+                .Distinct()
+                .Take(10)
+                .ToListAsync();
+
+            return flights;
+        }
+
+
+
+
     }
 }

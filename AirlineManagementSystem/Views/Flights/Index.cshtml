@@ -4,7 +4,7 @@
     ViewData["Title"] = "Flights";
     var role = ViewBag.Role as string;
     var username = ViewBag.Username as string;
-    var search = ViewBag.Search as string;
+    var search = ViewBag.SearchQuery as string;
 }
 
 <div class="container mt-5">
@@ -20,7 +20,7 @@
     <div class="row mb-4">
         <div class="col-md-6">
             <form method="get" asp-action="Index" class="d-flex">
-                <input type="text" name="search" placeholder="Search by flight number"
+                <input type="text" name="search" id="searchInput" placeholder="Search by flight number"
                        value="@search" class="form-control me-2" style="max-width: 350px; font-size: 15px;" />
                 <button type="submit" class="btn btn-outline-secondary" style="font-size: 15px;">Search</button>
             </form>
@@ -39,8 +39,32 @@
         <thead class="table-dark text-center">
             <tr>
                 <th>Flight Number</th>
-                <th>Departure</th>
-                <th>Departure Time</th>
+                <th>
+                    <a href="@Url.Action("Index", new { page = ViewBag.CurrentPage, search = ViewBag.SearchQuery, sortBy = "Departure", sortOrder = ViewBag.SortOrder == "asc" ? "desc" : "asc" })">
+                        Departure @if (ViewBag.SortBy == "Departure")
+                        { @if (ViewBag.SortOrder == "asc")
+                            {
+                                <i class="bi bi-arrow-up-short"></i>
+                            }
+                            else
+                            {
+                                <i class="bi bi-arrow-down-short"></i>
+                            }          }
+                    </a>
+                </th>
+                <th>
+                    <a href="@Url.Action("Index", new { page = ViewBag.CurrentPage, search = ViewBag.SearchQuery, sortBy = "DepartureTime", sortOrder = ViewBag.SortOrder == "asc" ? "desc" : "asc" })">
+                        Departure Time @if (ViewBag.SortBy == "DepartureTime")
+                        { @if (ViewBag.SortOrder == "asc")
+                            {
+                                <i class="bi bi-arrow-up-short"></i>
+                            }
+                            else
+                            {
+                                <i class="bi bi-arrow-down-short"></i>
+                            }          }
+                    </a>
+                </th>
                 <th>Destination</th>
                 <th>Arrival Time</th>
                 <th>Actions</th>
@@ -57,21 +81,71 @@
                     <td>@flight.ArrivalTime.ToString("g")</td>
                     <td class="text-center">
                         <div class="btn-group">
-                            <a asp-action="Details" asp-route-id="@flight.Id" class="btn btn-info">Details</a><br/>
-
+                            <a asp-action="Details" asp-route-id="@flight.Id" class="btn btn-info">Details</a><br />
                             @if (role == "Manager")
                             {
-                                <a asp-action="Edit" asp-route-id="@flight.Id" class="btn btn-warning">Edit</a><br/>
-                                <a asp-action="Delete" asp-route-id="@flight.Id" class="btn btn-danger">Delete</a><br/>
+                                <a asp-action="Edit" asp-route-id="@flight.Id" class="btn btn-warning">Edit</a>
+                                <br />
+                                <a asp-action="Delete" asp-route-id="@flight.Id" class="btn btn-danger">Delete</a>
+                                <br />
                             }
-                    
-                        <a asp-controller="Booking" asp-action="Book" asp-route-flightId="@flight.Id" class="btn btn-primary">Book</a>
-                    
-
+                            <a asp-controller="Booking" asp-action="Book" asp-route-flightId="@flight.Id" class="btn btn-primary">Book</a>
                         </div>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
+
+
+    <!-- Pagination -->
+    <div class="mt-3">
+        <ul class="pagination">
+            @if (ViewBag.CurrentPage > 1)
+            {
+                <li class="page-item">
+                    <a class="page-link" href="@Url.Action("Index", new { page = ViewBag.CurrentPage - 1, search = ViewBag.SearchQuery })">Previous</a>
+                </li>
+            }
+
+            @for (var i = 1; i <= ViewBag.TotalPages; i++)
+            {
+                <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { page = i, search = ViewBag.SearchQuery })">@i</a>
+                </li>
+            }
+
+            @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+            {
+                <li class="page-item">
+                    <a class="page-link" href="@Url.Action("Index", new { page = ViewBag.CurrentPage + 1, search = ViewBag.SearchQuery })">Next</a>
+                </li>
+            }
+        </ul>
+    </div>
+
 </div>
+
+@section Scripts {
+    <!-- jQuery and jQuery UI CDN -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <link href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" rel="stylesheet" />
+
+    <script>
+        $(function () {
+            $("#searchInput").autocomplete({
+                source: function (request, response) {
+                    $.ajax({
+                        url: '/Flights/Autocomplete',
+                        data: { term: request.term },
+                        success: function (data) {
+                            response(data);
+                        }
+                    });
+                },
+                minLength: 1
+            });
+        });
+    </script>
+}

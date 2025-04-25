@@ -10,6 +10,9 @@ namespace AirlineManagementSystem.Repositories
         Task AddAsync(FlightDto flight);                     // EF Core
         Task UpdateAsync(int id, FlightDto flight);          // LINQ
         Task DeleteAsync(int id);                            // Dapper
+
+        Task<IEnumerable<string>> GetFlightSuggestionsAsync(string term); //EF Core
+      //  Task<IEnumerable<FlightDto>> GetPaginatedAsync(int page, int pageSize); //EF Core
     }
 
 }

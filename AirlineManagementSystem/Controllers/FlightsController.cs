@@ -13,37 +13,68 @@ namespace AirlineManagementSystem.Controllers
         private readonly IFlightService _service; // Flight service interface
         private readonly ILogger<FlightsController> _logger; // Logger for logging information and errors
 
-        // Constructor to inject service and logger
+        ///<summary>
+        /// Constructor to inject service and logger.
+        ///</summary>
         public FlightsController(IFlightService service, ILogger<FlightsController> logger)
         {
             _service = service;
             _logger = logger;
         }
 
-        // Display list of flights with optional search
-        public async Task<IActionResult> Index(string search)
+        ///<summary>
+        /// Display list of flights with optional search, sorting, and pagination.
+        ///</summary>
+        public async Task<IActionResult> Index(string search, int page = 1, string sortBy = "Departure", string sortOrder = "asc")
         {
             try
             {
-                _logger.LogInformation("GET Index page requested with search query: {SearchQuery}.", search);
-                var flights = await _service.GetAllAsync(); // Get all flights
-                _logger.LogInformation("Fetched {FlightCount} flights.", flights.Count());
+                _logger.LogInformation("GET Index page requested with search query: {SearchQuery}, page number: {Page}, sort by: {SortBy}, sort order: {SortOrder}.", search, page, sortBy, sortOrder);
 
+                // Define page size
+                int pageSize = 5;
+
+                var flights = await _service.GetAllAsync();
+
+                // Filter flights based on search query
                 if (!string.IsNullOrEmpty(search))
                 {
-                    // Filter by flight number
-                    flights = flights.Where(f => f.FlightNumber.Contains(search)).ToList();
+                    flights = flights.Where(f => f.FlightNumber.Contains(search, StringComparison.OrdinalIgnoreCase)).ToList();
                     _logger.LogInformation("Filtered flights by FlightNumber: {SearchQuery}.", search);
                 }
+
+                // Apply sorting
+                switch (sortBy.ToLower())
+                {
+                    case "departure":
+                        flights = sortOrder == "asc" ? flights.OrderBy(f => f.Departure).ToList() : flights.OrderByDescending(f => f.Departure).ToList();
+                        break;
+                    case "departuretime":
+                        flights = sortOrder == "asc" ? flights.OrderBy(f => f.DepartureTime).ToList() : flights.OrderByDescending(f => f.DepartureTime).ToList();
+                        break;
+                    default:
+                        break;
+                }
+
+                // Paginate results
+                var paginatedFlights = flights.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+                int totalFlights = flights.Count();
+                int totalPages = (int)Math.Ceiling((double)totalFlights / pageSize);
+
+                // Set pagination-related ViewBag properties
+                ViewBag.CurrentPage = page;
+                ViewBag.TotalPages = totalPages;
+                ViewBag.SearchQuery = search;
+                ViewBag.SortBy = sortBy;
+                ViewBag.SortOrder = sortOrder;
 
                 // Pass role and username to view
                 var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
                 ViewBag.Role = userRole;
-
                 var username = User.Identity.Name;
                 ViewBag.Username = username;
 
-                return View(flights); // Return view with flight list
+                return View(paginatedFlights);
             }
             catch (Exception ex)
             {
@@ -52,7 +83,9 @@ namespace AirlineManagementSystem.Controllers
             }
         }
 
-        // Display user details with optional search
+        ///<summary>
+        /// Display user details with optional search.
+        ///</summary>
         public async Task<IActionResult> UserDetails(string search)
         {
             try
@@ -76,7 +109,9 @@ namespace AirlineManagementSystem.Controllers
             }
         }
 
-        // Display flight details by ID
+        ///<summary>
+        /// Display flight details by ID.
+        ///</summary>
         public async Task<IActionResult> Details(int id)
         {
             try
@@ -99,7 +134,9 @@ namespace AirlineManagementSystem.Controllers
             }
         }
 
-        // Show create flight form (Only for Managers)
+        ///<summary>
+        /// Show create flight form (Only for Managers).
+        ///</summary>
         [Authorize(Roles = "Manager")]
         public IActionResult Create()
         {
@@ -115,7 +152,9 @@ namespace AirlineManagementSystem.Controllers
             }
         }
 
-        // Handle POST request to create new flight (Only for Managers)
+        ///<summary>
+        /// Handle POST request to create new flight (Only for Managers).
+        ///</summary>
         [Authorize(Roles = "Manager")]
         [HttpPost]
         public async Task<IActionResult> Create(FlightDto dto)
@@ -141,7 +180,9 @@ namespace AirlineManagementSystem.Controllers
             }
         }
 
-        // Show edit flight form (Only for Managers)
+        ///<summary>
+        /// Show edit flight form (Only for Managers).
+        ///</summary>
         [Authorize(Roles = "Manager")]
         public async Task<IActionResult> Edit(int id)
         {
@@ -165,7 +206,9 @@ namespace AirlineManagementSystem.Controllers
             }
         }
 
-        // Handle POST request to edit flight (Only for Managers)
+        ///<summary>
+        /// Handle POST request to edit flight (Only for Managers).
+        ///</summary>
         [Authorize(Roles = "Manager")]
         [HttpPost]
         public async Task<IActionResult> Edit(int id, FlightDto dto)
@@ -185,7 +228,9 @@ namespace AirlineManagementSystem.Controllers
             }
         }
 
-        // Delete flight by ID
+        ///<summary>
+        /// Delete flight by ID.
+        ///</summary>
         public async Task<IActionResult> Delete(int id)
         {
             try
@@ -201,6 +246,23 @@ namespace AirlineManagementSystem.Controllers
                 _logger.LogError(ex, "Error occurred while deleting the flight.");
                 return View("Error", new { Message = "An error occurred while deleting the flight." });
             }
+        }
+
+        ///<summary>
+        /// Autocomplete flight number based on search term.
+        ///</summary>
+        [HttpGet]
+        public async Task<IActionResult> Autocomplete(string term)
+        {
+            var results = await _service.GetAllAsync();
+            var suggestions = results
+                .Where(f => f.FlightNumber.Contains(term, StringComparison.OrdinalIgnoreCase))
+                .Select(f => f.FlightNumber)
+                .Distinct()
+                .Take(10)
+                .ToList();
+
+            return Json(suggestions); // Return flight number suggestions
         }
     }
 }
