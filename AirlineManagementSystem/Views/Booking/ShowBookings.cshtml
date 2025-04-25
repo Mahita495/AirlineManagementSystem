@@ -1,0 +1,43 @@
+﻿@model IEnumerable<AirlineManagementSystem.DTOs.BookingDto>
+
+@{
+    ViewData["Title"] = "My Bookings";
+}
+
+<h2>My Bookings</h2>
+
+@if (!Model.Any())
+{
+    <p>You haven't booked any flights yet.</p>
+}
+else
+{
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>User Id</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Departure</th>
+                <th>Arrival</th>
+                <th>Booking Date</th>
+                <th>Flight ID</th>
+                
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var booking in Model)
+            {
+                <tr>
+                    <td>@booking.UserId</td>
+                    <td>@booking.From</td>
+                    <td>@booking.To</td>
+                    <td>@booking.DepartureTime</td>
+                    <td>@booking.ArrivalTime</td>
+                    <td>@booking.BookingDate</td>
+                    <td>@booking.FlightId</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

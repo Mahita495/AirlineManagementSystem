@@ -1,0 +1,77 @@
+﻿@model IEnumerable<AirlineManagementSystem.DTOs.FlightDto>
+
+@{
+    ViewData["Title"] = "Flights";
+    var role = ViewBag.Role as string;
+    var username = ViewBag.Username as string;
+    var search = ViewBag.Search as string;
+}
+
+<div class="container mt-5">
+    <h2 class="mb-4" style="font-size: 28px;">Flights Management</h2>
+
+    @if (!string.IsNullOrEmpty(username))
+    {
+        <div class="alert alert-info" style="font-size: 16px;">
+            Hello, <span class="badge bg-primary">@username</span>! Your role is: <span class="badge bg-secondary">@role</span>
+        </div>
+    }
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <form method="get" asp-action="Index" class="d-flex">
+                <input type="text" name="search" placeholder="Search by flight number"
+                       value="@search" class="form-control me-2" style="max-width: 350px; font-size: 15px;" />
+                <button type="submit" class="btn btn-outline-secondary" style="font-size: 15px;">Search</button>
+            </form>
+        </div>
+        <div class="col-md-3">
+            @if (role == "Manager")
+            {
+                <a asp-action="Create" class="btn btn-success" style="font-size: 15px;">
+                    Create New Flight
+                </a>
+            }
+        </div>
+    </div>
+
+    <table class="table table-bordered table-striped" style="font-size: 15px;">
+        <thead class="table-dark text-center">
+            <tr>
+                <th>Flight Number</th>
+                <th>Departure</th>
+                <th>Departure Time</th>
+                <th>Destination</th>
+                <th>Arrival Time</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var flight in Model)
+            {
+                <tr>
+                    <td>@flight.FlightNumber</td>
+                    <td>@flight.Departure</td>
+                    <td>@flight.DepartureTime.ToString("g")</td>
+                    <td>@flight.Destination</td>
+                    <td>@flight.ArrivalTime.ToString("g")</td>
+                    <td class="text-center">
+                        <div class="btn-group">
+                            <a asp-action="Details" asp-route-id="@flight.Id" class="btn btn-info">Details</a><br/>
+
+                            @if (role == "Manager")
+                            {
+                                <a asp-action="Edit" asp-route-id="@flight.Id" class="btn btn-warning">Edit</a><br/>
+                                <a asp-action="Delete" asp-route-id="@flight.Id" class="btn btn-danger">Delete</a><br/>
+                            }
+                    
+                        <a asp-controller="Booking" asp-action="Book" asp-route-flightId="@flight.Id" class="btn btn-primary">Book</a>
+                    
+
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

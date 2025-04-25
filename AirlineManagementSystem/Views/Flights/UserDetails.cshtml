@@ -1,0 +1,50 @@
+﻿@model IEnumerable<AirlineManagementSystem.DTOs.UserDto>
+
+@{
+    ViewData["Title"] = "User Details";
+    var role = ViewBag.Role as string;
+}
+
+<div class="container mt-5">
+    <h2 class="mb-4" style="font-size: 28px;">User Management</h2>
+
+    @if (!string.IsNullOrEmpty(role))
+    {
+        <div class="alert alert-info" style="font-size: 16px;">
+            Logged in as: <span class="badge bg-primary">@role</span>
+        </div>
+    }
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <form method="get" asp-action="UserDetails" class="d-flex">
+                <input type="text" name="search" placeholder="Search by username"
+                       class="form-control me-2" style="max-width: 350px; font-size: 15px;" />
+                <button type="submit" class="btn btn-outline-secondary" style="font-size: 15px;">Search</button>
+            </form>
+        </div>
+    </div>
+
+    <table class="table table-bordered table-striped" style="font-size: 15px;">
+        <thead class="table-dark text-center">
+            <tr>
+                <th>User Id</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                <tr>
+                    <td>@user.Id</td>
+                    <td>@user.Username</td>
+                    <td>@user.Email</td>
+                    <td>@user.Role</td>
+                    
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

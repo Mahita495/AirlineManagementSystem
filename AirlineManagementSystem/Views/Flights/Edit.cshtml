@@ -1,0 +1,20 @@
+﻿@model AirlineManagementSystem.DTOs.FlightDto
+
+<h2>Edit Flight</h2>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Id" />
+    <div class="form-group">
+        <label asp-for="FlightNumber"></label>
+        <input asp-for="FlightNumber" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="Departure"></label>
+        <input asp-for="Departure" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="Destination"></label>
+        <input asp-for="Destination" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-warning">Update</button>
+</form>

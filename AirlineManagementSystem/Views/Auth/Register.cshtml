@@ -1,0 +1,91 @@
+﻿@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">@ViewData["Title"]</h2>
+
+    <div class="card shadow-lg p-4 rounded border" style="max-width: 400px; margin: 0 auto;">
+        <form id="registerForm" method="post">
+            <div class="form-group">
+                <label for="Username" class="font-weight-bold">Username</label>
+                <input type="text" class="form-control" id="Username" name="Username" required />
+            </div>
+
+            <div class="form-group">
+                <label for="Password" class="font-weight-bold">Password</label>
+                <input type="password" class="form-control" id="Password" name="Password" required />
+            </div>
+
+            <div class="form-group">
+                <label for="Email" class="font-weight-bold">Email</label>
+                <input type="email" class="form-control" id="Email" name="Email" required />
+            </div>
+
+            <div class="form-group">
+                <label for="Role" class="font-weight-bold">Role</label>
+                <select class="form-control" id="Role" name="Role" required>
+                    <option value="">Select Role</option>
+                    <option value="Manager">Manager</option>
+                    <option value="User">User</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-success btn-lg w-100 mt-3">Register</button>
+        </form>
+
+        <div id="registerError" class="alert alert-danger mt-3" style="display:none;">
+            Registration failed. Please try again.
+        </div>
+
+        <div class="text-center mt-3">
+            <a href="/Auth/Login">Already have an account? Login here</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#registerForm").submit(function (e) {
+                e.preventDefault();
+                $("#registerError").hide();
+
+                var username = $("#Username").val();
+                var password = $("#Password").val();
+                var role = $("#Role").val();
+                var email = $("#Email").val();
+
+                // Log the data being sent
+                console.log("Sending registration data:", {
+                    Username: username,
+                    Password: password,
+                    Role: role,
+                    Email: email
+                });
+
+                $.ajax({
+                    url: "/Auth/Register",
+                    type: "POST",
+                    contentType: "application/json",  // This is crucial for [FromBody]
+                    data: JSON.stringify({
+                        Username: username,
+                        Password: password,
+                        Role: role,
+                        Email: email
+                    }),
+                    success: function (response) {
+                        console.log("Registration successful:", response);
+                        alert("Registration successful! Please login.");
+                        window.location.href = "/Auth/Login";
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Registration error:", xhr.responseText);
+                        $("#registerError").text(xhr.responseText || "Registration failed. Please try again.").show();
+                    }
+                });
+            });
+        });
+    </script>
+}

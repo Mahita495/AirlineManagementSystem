@@ -1,0 +1,76 @@
+﻿@model AirlineManagementSystem.DTOs.FlightDto
+
+@{
+    ViewData["Title"] = "Create Flight";
+
+    var timeSlots = Enumerable.Range(0, 48)
+        .Select(i => DateTime.Today.AddMinutes(30 * i).ToString("HH:mm"))
+        .ToList();
+}
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Create New Flight</h4>
+        </div>
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="FlightNumber" class="form-label"></label>
+                        <input asp-for="FlightNumber" class="form-control" />
+                        <span asp-validation-for="FlightNumber" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Price" class="form-label"></label>
+                        <input asp-for="Price" class="form-control" />
+                        <span asp-validation-for="Price" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="Departure" class="form-label"></label>
+                        <input asp-for="Departure" class="form-control" />
+                        <span asp-validation-for="Departure" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="DepartureTime" class="form-label">Departure Time</label>
+                        <select asp-for="DepartureTime" class="form-select">
+                            <option value="">-- Select Time --</option>
+                            @foreach (var time in timeSlots)
+                            {
+                                <option value="@DateTime.Today.Add(TimeSpan.Parse(time))">@time</option>
+                            }
+                        </select>
+                        <span asp-validation-for="DepartureTime" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label asp-for="Destination" class="form-label"></label>
+                        <input asp-for="Destination" class="form-control" />
+                        <span asp-validation-for="Destination" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="ArrivalTime" class="form-label">Arrival Time</label>
+                        <select asp-for="ArrivalTime" class="form-select">
+                            <option value="">-- Select Time --</option>
+                            @foreach (var time in timeSlots)
+                            {
+                                <option value="@DateTime.Today.Add(TimeSpan.Parse(time))">@time</option>
+                            }
+                        </select>
+                        <span asp-validation-for="ArrivalTime" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="text-end">
+                    <button type="submit" class="btn btn-success">Save</button>
+                    <a asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

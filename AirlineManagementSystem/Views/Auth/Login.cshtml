@@ -1,0 +1,86 @@
+﻿@{
+    ViewData["Title"] = "Login";
+}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">@ViewData["Title"]</h2>
+    <div class="card shadow-lg p-4 rounded border" style="max-width: 400px; margin: 0 auto;">
+        <form id="loginForm" method="post">
+            <div class="form-group">
+                <label for="Username" class="font-weight-bold">Username</label>
+                <input type="text" class="form-control" id="Username" name="Username" required />
+            </div>
+            <div class="form-group">
+                <label for="Password" class="font-weight-bold">Password</label>
+                <input type="password" class="form-control" id="Password" name="Password" required />
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">Login</button>
+        </form>
+        <div id="loginError" class="alert alert-danger mt-3" style="display:none;">
+            Login failed. Please check your credentials and try again.
+        </div>
+        <div id="tokenDisplay" class="alert alert-success mt-3" style="display:none;">
+            <p><strong>JWT Token:</strong></p>
+            <p id="tokenText" style="word-break: break-all;"></p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#loginForm").submit(function (e) {
+                e.preventDefault();  // Prevent form submission
+                // Hide any previous messages
+                $("#loginError").hide();
+                $("#tokenDisplay").hide();
+
+                // Get the username and password input values
+                const username = $("#Username").val();
+                const password = $("#Password").val();
+
+                // Print to console to verify data
+                console.log("Username: " + username);
+                console.log("Password: " + password);
+
+                $.ajax({
+                    url: "/Auth/Login",
+                    type: "POST",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        Username: username,
+                        Password: password
+                    }),
+                    success: function (data) {
+                        console.log("Response Data: ", data);  // Log the response
+
+                        if (data && data.token) {
+                            // Display token in the UI
+                            $("#tokenText").text(data.token);
+                            $("#tokenDisplay").show();
+
+                            // Store token in localStorage
+                            localStorage.setItem("jwtToken", data.token);
+                            document.cookie = `jwt=${data.token}; path=/`;
+
+                            // Alert with success message
+                            alert("Login successful! Token has been generated and stored.");
+
+                            // Redirect after a short delay to allow seeing the token
+                            setTimeout(function() {
+                                window.location.href = "/Flights/Index";
+                            }, 3000);
+                        } else {
+                            alert("Login failed. Token not received. Response: " + JSON.stringify(data));
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error during login:", error);
+                        console.error("Response:", xhr.responseText);
+                        $("#loginError").text("Login error: " + (xhr.responseJSON?.error || error)).show();
+                    }
+                });
+            });
+        });
+    </script>
+}
