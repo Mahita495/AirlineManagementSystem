@@ -2,5 +2,6 @@
 {
     public class GitTestClass
     {
+        public int Id { get; set; }
     }
 }
