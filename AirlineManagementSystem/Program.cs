@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using NLog.Web;
 using System.Reflection;
 using AirlineManagementSystem.Profiles;
+using AirlineManagementSystem.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +32,8 @@ builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);  // Specify the
 builder.Services.AddScoped<IFlightService, FlightService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IBookingService, BookingService>();
+// Add this after your HttpClient registration
+builder.Services.AddScoped<UserApiService>();
 
 // Session Support
 builder.Services.AddDistributedMemoryCache();
@@ -56,6 +59,12 @@ builder.Services.AddAntiforgery(options =>
 {
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.Cookie.SameSite = SameSiteMode.Lax;
+});
+
+// In Program.cs or Startup.cs of your MVC project
+builder.Services.AddHttpClient("AirlineAPI", client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7099/"); // Replace PORT with your API port
 });
 
 // JWT Configuration

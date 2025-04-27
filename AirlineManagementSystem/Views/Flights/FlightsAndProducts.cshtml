@@ -1,0 +1,74 @@
+﻿@model AirlineManagementSystem.Models.ProductsAndFlights
+
+@{
+    ViewData["Title"] = "Products and Flights";
+}
+
+<h1>Products and Flights</h1>
+
+<hr />
+
+<h2>Flights</h2>
+@if (Model.Flights != null && Model.Flights.Any())
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Flight Id</th>
+                <th>Departure</th>
+                <th>Destination</th>
+                <th>Departure</th>
+                <th>Arrival</th>
+                <th>Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var flight in Model.Flights)
+            {
+                <tr>
+                    <td>@flight.Id</td>
+                    <td>@flight.Departure</td>
+                    <td>@flight.Destination</td>
+                    <td>@flight.DepartureTime.ToString("g")</td>
+                    <td>@flight.ArrivalTime.ToString("g")</td>
+                    <td>@flight.Price.ToString("C")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No flights available.</p>
+}
+
+<hr />
+
+<h2>Products</h2>
+@if (Model.Products != null && Model.Products.Any())
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>Price</th>
+                
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var product in Model.Products)
+            {
+                <tr>
+                    <td>@product.ProductName</td>
+                    <td>@product.Price</td>
+                    
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No products available.</p>
+}
+

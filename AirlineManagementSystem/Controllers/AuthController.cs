@@ -31,8 +31,12 @@ namespace AirlineManagementSystem.Controllers
         {
             return View();
         }
-
-        // POST method for handling user registration
+        /// <summary>
+        /// This POST method takes values and registers a new user in the system.
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns>Adds user and redirects to login page</returns>
+       
         [HttpPost]
         public async Task<IActionResult> Register([FromBody] RegisterRequest dto)
         {
@@ -70,7 +74,11 @@ namespace AirlineManagementSystem.Controllers
             return View();
         }
 
-        // POST method for handling user login
+        /// <summary>
+        /// This POST Method take username and password and check if the user is valid or not.
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns>Token string</returns>
         [HttpPost]
         public IActionResult Login([FromBody] LoginRequest dto)
         {
@@ -138,7 +146,10 @@ namespace AirlineManagementSystem.Controllers
             return Ok(new { token = tokenString });
         }
 
-        // POST method for logging out the user
+        /// <summary>
+        ///This method handles the logout process by clearing the session and deleting the JWT cookie.
+        /// </summary>
+        /// <returns></returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Logout()

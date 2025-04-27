@@ -1,14 +1,17 @@
 ﻿using AirlineManagementSystem.Controllers;
+using AirlineManagementSystem.Data;
 using AirlineManagementSystem.DTOs;
+using AirlineManagementSystem.Models;
 using AirlineManagementSystem.Repositories;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
-using System.Security.Principal;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -16,19 +19,26 @@ namespace AirlineManagementSystem.Tests.Controllers
 {
     public class FlightsControllerTests
     {
-        // Mocking dependencies: IFlightService and ILogger for FlightsController
+        // Mocking dependencies: IFlightService, ILogger, and AppDbContext for FlightsController
         private readonly Mock<IFlightService> _mockService;
         private readonly Mock<ILogger<FlightsController>> _mockLogger;
+        private readonly Mock<AppDbContext> _mockContext;
         private readonly FlightsController _controller;
 
         public FlightsControllerTests()
         {
-            // Initializing the mocked services and controller
+            // Initializing the mocked services and context
             _mockService = new Mock<IFlightService>();
             _mockLogger = new Mock<ILogger<FlightsController>>();
 
+            // Mock DbContext using an in-memory database option
+            var options = new DbContextOptionsBuilder<AppDbContext>()
+                .UseInMemoryDatabase(databaseName: "TestFlightsDb")
+                .Options;
+            _mockContext = new Mock<AppDbContext>(options);
+
             // Creating an instance of FlightsController with mocked dependencies
-            _controller = new FlightsController(_mockService.Object, _mockLogger.Object);
+            _controller = new FlightsController(_mockService.Object, _mockLogger.Object, _mockContext.Object);
 
             // Mocking a user with "Manager" role to simulate authentication context
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
@@ -43,21 +53,31 @@ namespace AirlineManagementSystem.Tests.Controllers
             };
         }
 
-        // Test for the Index action to ensure it returns a view with flights
+        // Test for the Index action to ensure it returns a view with flights and pagination
         [Fact]
-        public async Task Index_ReturnsViewWithFlights()
+        public async Task Index_ReturnsViewWithPaginatedFlights()
         {
             // Arrange: Preparing mock data to return from the service
-            var flights = new List<FlightDto> { new FlightDto { FlightNumber = "FL123" } };
+            var flights = new List<FlightDto>
+            {
+                new FlightDto { FlightNumber = "FL123", Departure = "New York", DepartureTime = DateTime.Now },
+                new FlightDto { FlightNumber = "FL124", Departure = "London", DepartureTime = DateTime.Now.AddHours(2) }
+            };
             _mockService.Setup(s => s.GetAllAsync()).ReturnsAsync(flights);
 
-            // Act: Calling the Index method of the controller
-            var result = await _controller.Index(null);
+            // Act: Calling the Index method of the controller with pagination and sorting parameters
+            var result = await _controller.Index(null, 1, "Departure", "asc");
 
             // Assert: Verifying that the returned result is of type ViewResult and contains the correct model
             var viewResult = Assert.IsType<ViewResult>(result);
-            var model = Assert.IsAssignableFrom<IEnumerable<FlightDto>>(viewResult.Model);
-            Assert.Single(model); // Verifying that only one flight is returned
+            var model = Assert.IsAssignableFrom<List<FlightDto>>(viewResult.Model);
+            Assert.Equal(2, model.Count); // Both flights should be returned with these parameters
+
+            // Verify pagination ViewBag properties
+            Assert.Equal(1, viewResult.ViewData["CurrentPage"]);
+            Assert.NotNull(viewResult.ViewData["TotalPages"]);
+            Assert.Equal("Departure", viewResult.ViewData["SortBy"]);
+            Assert.Equal("asc", viewResult.ViewData["SortOrder"]);
         }
 
         // Test for the Index action with search query to filter the results
@@ -67,19 +87,43 @@ namespace AirlineManagementSystem.Tests.Controllers
             // Arrange: Preparing mock data with two flights
             var flights = new List<FlightDto>
             {
-                new FlightDto { FlightNumber = "FL123" },
-                new FlightDto { FlightNumber = "FL999" }
+                new FlightDto { FlightNumber = "FL123", Departure = "New York", DepartureTime = DateTime.Now },
+                new FlightDto { FlightNumber = "FL999", Departure = "London", DepartureTime = DateTime.Now.AddHours(2) }
             };
             _mockService.Setup(s => s.GetAllAsync()).ReturnsAsync(flights);
 
             // Act: Calling the Index method with a search query
-            var result = await _controller.Index("123");
+            var result = await _controller.Index("123", 1, "Departure", "asc");
 
             // Assert: Verifying that the returned result filters the flights correctly
             var viewResult = Assert.IsType<ViewResult>(result);
-            var model = Assert.IsAssignableFrom<IEnumerable<FlightDto>>(viewResult.Model);
+            var model = Assert.IsAssignableFrom<List<FlightDto>>(viewResult.Model);
             Assert.Single(model); // Only one flight should match the query
             Assert.Equal("FL123", model.First().FlightNumber); // The filtered flight should be FL123
+        }
+
+        // Test for the Index action with sorting by DepartureTime
+        [Fact]
+        public async Task Index_WithSorting_OrdersResults()
+        {
+            // Arrange: Preparing mock data with flights having different departure times
+            var earlierTime = DateTime.Now;
+            var laterTime = DateTime.Now.AddHours(2);
+            var flights = new List<FlightDto>
+            {
+                new FlightDto { FlightNumber = "FL123", Departure = "New York", DepartureTime = laterTime },
+                new FlightDto { FlightNumber = "FL999", Departure = "London", DepartureTime = earlierTime }
+            };
+            _mockService.Setup(s => s.GetAllAsync()).ReturnsAsync(flights);
+
+            // Act: Calling the Index method with sorting by departure time descending
+            var result = await _controller.Index(null, 1, "departuretime", "desc");
+
+            // Assert: Verifying that the returned result sorts the flights correctly
+            var viewResult = Assert.IsType<ViewResult>(result);
+            var model = Assert.IsAssignableFrom<List<FlightDto>>(viewResult.Model);
+            Assert.Equal(2, model.Count());
+            Assert.Equal("FL123", model.First().FlightNumber); // The later flight should be first
         }
 
         // Test for the UserDetails action to ensure it filters users correctly
@@ -217,6 +261,57 @@ namespace AirlineManagementSystem.Tests.Controllers
             _mockService.Verify(s => s.DeleteAsync(1), Times.Once);
             var redirect = Assert.IsType<RedirectToActionResult>(result);
             Assert.Equal("Index", redirect.ActionName); // Redirects to the Index action after deletion
+        }
+
+        // Test for the Autocomplete action to return flight number suggestions
+        [Fact]
+        public async Task Autocomplete_ReturnsSuggestions()
+        {
+            // Arrange: Preparing mock data with flights
+            var flights = new List<FlightDto>
+            {
+                new FlightDto { FlightNumber = "FL123" },
+                new FlightDto { FlightNumber = "FL124" },
+                new FlightDto { FlightNumber = "AA999" }
+            };
+            _mockService.Setup(s => s.GetAllAsync()).ReturnsAsync(flights);
+
+            // Act: Calling the Autocomplete method with a search term
+            var result = await _controller.Autocomplete("FL");
+
+            // Assert: Verifying that the correct suggestions are returned
+            var jsonResult = Assert.IsType<JsonResult>(result);
+            var suggestions = Assert.IsType<List<string>>(jsonResult.Value);
+            Assert.Equal(2, suggestions.Count); // Only FL flights should be returned
+            Assert.Contains("FL123", suggestions);
+            Assert.Contains("FL124", suggestions);
+        }
+
+        
+        // Test to verify controller creation with alternative constructor
+        [Fact]
+        public void AlternativeConstructor_CreatesController()
+        {
+            // Act: Create controller with alternative constructor
+            var controller = new FlightsController(_mockService.Object, _mockLogger.Object);
+
+            // Assert: Verify controller was created successfully
+            Assert.NotNull(controller);
+        }
+
+        // Test for handling exceptions in Index action
+        [Fact]
+        public async Task Index_HandlesExceptions_ReturnsErrorView()
+        {
+            // Arrange: Setup service to throw exception
+            _mockService.Setup(s => s.GetAllAsync()).ThrowsAsync(new Exception("Test exception"));
+
+            // Act: Call Index method which should encounter the exception
+            var result = await _controller.Index(null);
+
+            // Assert: Verify error view is returned
+            var viewResult = Assert.IsType<ViewResult>(result);
+            Assert.Equal("Error", viewResult.ViewName);
         }
     }
 }

@@ -17,6 +17,20 @@ namespace AirlineManagementSystem.Data
         // DbSet for Bookings, mapping to the Bookings table in the database
         public DbSet<Booking> Bookings { get; set; }
 
+        public DbSet<Product> Products { get; set; }
+
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Flight>()
+                .ToTable("Flights", "dbo");
+
+            modelBuilder.Entity<Product>()
+                .ToTable("Products", schema: "ShopDB.dbo")
+                .Metadata.SetIsTableExcludedFromMigrations(true); // important to avoid migration issues
+        }
+
+
 
 
 

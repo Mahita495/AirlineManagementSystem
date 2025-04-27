@@ -1,0 +1,21 @@
+﻿@model AirlineManagementSystem.Models.ErrorViewModel
+
+@{
+    ViewData["Title"] = "Error";
+}
+
+<div class="container mt-5">
+    <div class="text-center">
+        <h1 class="display-4 text-danger">Oops!</h1>
+        <p class="lead text-muted">@Model.Message</p>
+
+        @if (Model.ShowRequestId)
+        {
+            <p class="text-secondary">
+                <strong>Request ID:</strong> <code>@Model.RequestId</code>
+            </p>
+        }
+
+        <a class="btn btn-primary mt-4" href="/">Back to Home</a>
+    </div>
+</div>

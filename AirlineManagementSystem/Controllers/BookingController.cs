@@ -7,7 +7,12 @@ using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 
 namespace AirlineManagementSystem.Controllers
+
 {
+
+    /// <summary>
+    /// Booking Controller handles api endpoints related to flight bookings.
+    /// </summary>
     [Authorize(Roles = "User,Manager")]
     [Route("[controller]")]
     public class BookingController : Controller

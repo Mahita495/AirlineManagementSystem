@@ -1,30 +1,48 @@
-﻿using AirlineManagementSystem.DTOs;
+﻿using AirlineManagementSystem.Data;
+using AirlineManagementSystem.DTOs;
 using AirlineManagementSystem.Models;
 using AirlineManagementSystem.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace AirlineManagementSystem.Controllers
 {
-    //[Authorize(Roles = "Manager,User")] // Optional authorization for all actions
+    //[Authorize(Roles = "Manager,User")] 
+    [Route("[controller]")]
     public class FlightsController : Controller
     {
-        private readonly IFlightService _service; // Flight service interface
-        private readonly ILogger<FlightsController> _logger; // Logger for logging information and errors
+        // Flight service interface
+        private readonly IFlightService _service;
+        private readonly AppDbContext _context;
+        // Logger for logging information and errors
+
+        private readonly ILogger<FlightsController> _logger;
+        private IFlightService object1;
+        private ILogger<FlightsController> object2;
 
         ///<summary>
         /// Constructor to inject service and logger.
         ///</summary>
-        public FlightsController(IFlightService service, ILogger<FlightsController> logger)
+        public FlightsController(IFlightService service, ILogger<FlightsController> logger, AppDbContext context)
         {
             _service = service;
             _logger = logger;
+            _context = context;
+        }
+
+        public FlightsController(IFlightService object1, ILogger<FlightsController> object2)
+        {
+            this.object1 = object1;
+            this.object2 = object2;
         }
 
         ///<summary>
         /// Display list of flights with optional search, sorting, and pagination.
         ///</summary>
+        [HttpGet]
+        [Route("Index")]
         public async Task<IActionResult> Index(string search, int page = 1, string sortBy = "Departure", string sortOrder = "asc")
         {
             try
@@ -86,6 +104,7 @@ namespace AirlineManagementSystem.Controllers
         ///<summary>
         /// Display user details with optional search.
         ///</summary>
+        [Route("UserDetails")]
         public async Task<IActionResult> UserDetails(string search)
         {
             try
@@ -138,6 +157,7 @@ namespace AirlineManagementSystem.Controllers
         /// Show create flight form (Only for Managers).
         ///</summary>
         [Authorize(Roles = "Manager")]
+        [Route("Create")]
         public IActionResult Create()
         {
             try
@@ -157,6 +177,7 @@ namespace AirlineManagementSystem.Controllers
         ///</summary>
         [Authorize(Roles = "Manager")]
         [HttpPost]
+        [Route("Create")]
         public async Task<IActionResult> Create(FlightDto dto)
         {
             try
@@ -184,6 +205,7 @@ namespace AirlineManagementSystem.Controllers
         /// Show edit flight form (Only for Managers).
         ///</summary>
         [Authorize(Roles = "Manager")]
+        [Route("Edit")]
         public async Task<IActionResult> Edit(int id)
         {
             try
@@ -211,6 +233,7 @@ namespace AirlineManagementSystem.Controllers
         ///</summary>
         [Authorize(Roles = "Manager")]
         [HttpPost]
+        [Route("Edit")]
         public async Task<IActionResult> Edit(int id, FlightDto dto)
         {
             try
@@ -231,6 +254,7 @@ namespace AirlineManagementSystem.Controllers
         ///<summary>
         /// Delete flight by ID.
         ///</summary>
+        [Route("Delete")]
         public async Task<IActionResult> Delete(int id)
         {
             try
@@ -264,5 +288,43 @@ namespace AirlineManagementSystem.Controllers
 
             return Json(suggestions); // Return flight number suggestions
         }
+
+        [HttpGet]
+        [Route("ProductsAndFlights")]
+        public async Task<IActionResult> ProductsAndFlights()
+        {
+            try
+            {
+                var flightDtos = await _service.GetAllAsync();
+                var products = await _context.Products.ToListAsync();
+
+                // Manually map DTOs to Entities
+                var flights = flightDtos.Select(dto => new Flight
+                {
+                    Id = dto.Id,
+                    Departure = dto.Departure,
+                    Destination = dto.Destination,
+                    DepartureTime = dto.DepartureTime,
+                    ArrivalTime = dto.ArrivalTime,
+                    Price = dto.Price
+                    // Map other properties if needed
+                }).ToList();
+
+                var viewModel = new ProductsAndFlights
+                {
+                    Flights = flights,
+                    Products = products
+                };
+
+                return View(viewModel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching Products and Flights");
+                return View("Error", new ErrorViewModel { Message = "Error occurred." });
+            }
+        }
+
+
     }
 }
