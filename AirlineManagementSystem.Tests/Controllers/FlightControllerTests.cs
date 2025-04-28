@@ -22,7 +22,7 @@ namespace AirlineManagementSystem.Tests.Controllers
         // Mocking dependencies: IFlightService, ILogger, and AppDbContext for FlightsController
         private readonly Mock<IFlightService> _mockService;
         private readonly Mock<ILogger<FlightsController>> _mockLogger;
-        private readonly Mock<AppDbContext> _mockContext;
+        
         private readonly FlightsController _controller;
 
         public FlightsControllerTests()
@@ -31,14 +31,9 @@ namespace AirlineManagementSystem.Tests.Controllers
             _mockService = new Mock<IFlightService>();
             _mockLogger = new Mock<ILogger<FlightsController>>();
 
-            // Mock DbContext using an in-memory database option
-            var options = new DbContextOptionsBuilder<AppDbContext>()
-                .UseInMemoryDatabase(databaseName: "TestFlightsDb")
-                .Options;
-            _mockContext = new Mock<AppDbContext>(options);
 
             // Creating an instance of FlightsController with mocked dependencies
-            _controller = new FlightsController(_mockService.Object, _mockLogger.Object, _mockContext.Object);
+            _controller = new FlightsController(_mockService.Object, _mockLogger.Object);
 
             // Mocking a user with "Manager" role to simulate authentication context
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
@@ -267,27 +262,24 @@ namespace AirlineManagementSystem.Tests.Controllers
         [Fact]
         public async Task Autocomplete_ReturnsSuggestions()
         {
-            // Arrange: Preparing mock data with flights
-            var flights = new List<FlightDto>
-            {
-                new FlightDto { FlightNumber = "FL123" },
-                new FlightDto { FlightNumber = "FL124" },
-                new FlightDto { FlightNumber = "AA999" }
-            };
-            _mockService.Setup(s => s.GetAllAsync()).ReturnsAsync(flights);
+            // Arrange
+            var flightSuggestions = new List<string> { "FL123", "FL124" };
+            _mockService.Setup(s => s.GetFlightSuggestionsAsync("FL")).ReturnsAsync(flightSuggestions);
 
-            // Act: Calling the Autocomplete method with a search term
+            // Act
             var result = await _controller.Autocomplete("FL");
 
-            // Assert: Verifying that the correct suggestions are returned
+            // Assert
             var jsonResult = Assert.IsType<JsonResult>(result);
-            var suggestions = Assert.IsType<List<string>>(jsonResult.Value);
-            Assert.Equal(2, suggestions.Count); // Only FL flights should be returned
+            var suggestions = Assert.IsType<List<string>>(jsonResult.Value); // expecting List<string>
+
+            Assert.Equal(2, suggestions.Count);
             Assert.Contains("FL123", suggestions);
             Assert.Contains("FL124", suggestions);
         }
 
-        
+
+
         // Test to verify controller creation with alternative constructor
         [Fact]
         public void AlternativeConstructor_CreatesController()

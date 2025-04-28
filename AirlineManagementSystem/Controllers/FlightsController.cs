@@ -15,7 +15,7 @@ namespace AirlineManagementSystem.Controllers
     {
         // Flight service interface
         private readonly IFlightService _service;
-        private readonly AppDbContext _context;
+       
         // Logger for logging information and errors
 
         private readonly ILogger<FlightsController> _logger;
@@ -25,18 +25,13 @@ namespace AirlineManagementSystem.Controllers
         ///<summary>
         /// Constructor to inject service and logger.
         ///</summary>
-        public FlightsController(IFlightService service, ILogger<FlightsController> logger, AppDbContext context)
+        public FlightsController(IFlightService service, ILogger<FlightsController> logger)
         {
             _service = service;
             _logger = logger;
-            _context = context;
+            
         }
 
-        public FlightsController(IFlightService object1, ILogger<FlightsController> object2)
-        {
-            this.object1 = object1;
-            this.object2 = object2;
-        }
 
         ///<summary>
         /// Display list of flights with optional search, sorting, and pagination.
@@ -63,7 +58,7 @@ namespace AirlineManagementSystem.Controllers
 
                 // Apply sorting
                 switch (sortBy.ToLower())
-                {
+                { 
                     case "departure":
                         flights = sortOrder == "asc" ? flights.OrderBy(f => f.Departure).ToList() : flights.OrderByDescending(f => f.Departure).ToList();
                         break;
@@ -275,55 +270,17 @@ namespace AirlineManagementSystem.Controllers
         ///<summary>
         /// Autocomplete flight number based on search term.
         ///</summary>
+
         [HttpGet]
+        [Route("Autocomplete")]
         public async Task<IActionResult> Autocomplete(string term)
         {
-            var results = await _service.GetAllAsync();
-            var suggestions = results
-                .Where(f => f.FlightNumber.Contains(term, StringComparison.OrdinalIgnoreCase))
-                .Select(f => f.FlightNumber)
-                .Distinct()
-                .Take(10)
-                .ToList();
-
-            return Json(suggestions); // Return flight number suggestions
+            var suggestions = await _service.GetFlightSuggestionsAsync(term);
+            return Json(suggestions);
         }
 
-        [HttpGet]
-        [Route("ProductsAndFlights")]
-        public async Task<IActionResult> ProductsAndFlights()
-        {
-            try
-            {
-                var flightDtos = await _service.GetAllAsync();
-                var products = await _context.Products.ToListAsync();
 
-                // Manually map DTOs to Entities
-                var flights = flightDtos.Select(dto => new Flight
-                {
-                    Id = dto.Id,
-                    Departure = dto.Departure,
-                    Destination = dto.Destination,
-                    DepartureTime = dto.DepartureTime,
-                    ArrivalTime = dto.ArrivalTime,
-                    Price = dto.Price
-                    // Map other properties if needed
-                }).ToList();
 
-                var viewModel = new ProductsAndFlights
-                {
-                    Flights = flights,
-                    Products = products
-                };
-
-                return View(viewModel);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error fetching Products and Flights");
-                return View("Error", new ErrorViewModel { Message = "Error occurred." });
-            }
-        }
 
 
     }

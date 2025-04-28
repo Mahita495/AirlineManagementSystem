@@ -133,18 +133,31 @@
     <link href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" rel="stylesheet" />
 
     <script>
-        $(function () {
+               $(function () {
             $("#searchInput").autocomplete({
                 source: function (request, response) {
                     $.ajax({
-                        url: '/Flights/Autocomplete',
+                        url: '/Flights/Autocomplete', // Make sure this URL matches your route
+                        type: 'GET',
+                        dataType: 'json',
                         data: { term: request.term },
                         success: function (data) {
+                            console.log("Autocomplete data received:", data); // Debug logging
                             response(data);
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("Autocomplete error:", error);
+                            response([]);
                         }
                     });
                 },
-                minLength: 1
+                minLength: 1,
+                delay: 300,
+                select: function(event, ui) {
+                    $("#searchInput").val(ui.item.value);
+                    // Optionally submit the form on selection
+                    // $(this).closest("form").submit();
+                }
             });
         });
     </script>

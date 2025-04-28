@@ -1,4 +1,6 @@
-﻿namespace AirlineManagementSystem.DTOs
+﻿using AirlineManagementSystem.Models;
+
+namespace AirlineManagementSystem.DTOs
 {
     // FlightDto.cs
     public class FlightDto
@@ -12,6 +14,11 @@
         public DateTime ArrivalTime { get; set; }
 
         public double Price { get; set; }
+
+        public static implicit operator FlightDto?(Flight? v)
+        {
+            throw new NotImplementedException();
+        }
     }
 
 }

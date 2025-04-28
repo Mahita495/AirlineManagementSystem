@@ -25,6 +25,9 @@ builder.Services.AddRazorPages();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddDbContext<AppDbContext1>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection1")));
+
 builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);  // Specify the assembly that contains MappingProfile
 
 
