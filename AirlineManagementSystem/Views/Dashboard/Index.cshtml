@@ -1,0 +1,56 @@
+﻿@model AirlineManagementSystem.Models.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h1>Dashboard</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <h2>Flights</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Flight Number</th>
+                    <th>Destination</th>
+                    <th>Departure Time</th>
+                    <th>Arrival Time</th>
+                    
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var flight in Model.Flights)
+                {
+                    <tr>
+                        <td>@flight.FlightNumber</td>
+                        <td>@flight.Destination</td>
+                        <td>@flight.DepartureTime.ToString("g")</td> <!-- g = General Date/Time -->
+                        <td>@flight.ArrivalTime.ToString("g")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="col-md-6">
+        <h2>Passengers</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Passenger Name</th>
+                    <th>Flight Id</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var passenger in Model.Passengers)
+                {
+                    <tr>
+                        <td>@passenger.PassengerName</td>
+                        <td>@passenger.FlightId</td>>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

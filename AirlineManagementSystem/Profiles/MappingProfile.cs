@@ -14,6 +14,8 @@ namespace AirlineManagementSystem.Profiles
 
             // Map User to UserDto and vice versa
             CreateMap<User, UserDto>().ReverseMap();
+
+            CreateMap<Passenger, PassengerDto>().ReverseMap();
         }
     }
 }

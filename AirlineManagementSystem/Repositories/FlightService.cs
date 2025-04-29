@@ -99,8 +99,6 @@ namespace AirlineManagementSystem.Repositories
         /// Add a new flight to the database and clears the cache
         /// </summary>
         /// <param name="dto"></param>
-       
-
         public async Task AddAsync(FlightDto dto)
         {
             var flight = _mapper.Map<Flight>(dto);
@@ -116,8 +114,6 @@ namespace AirlineManagementSystem.Repositories
         /// </summary>
         /// <param name="id"></param>
         /// <param name="dto"></param>
-        
-
         public async Task UpdateAsync(int id, FlightDto dto)
         {
             var flight = _context.Flights.FirstOrDefault(f => f.Id == id);
@@ -142,8 +138,8 @@ namespace AirlineManagementSystem.Repositories
         {
             using var conn = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
             var query = "DELETE FROM Flights WHERE Id = @Id";
+            //var query = "DELETE FROM Flights with(NOLOCK) WHERE Id = @Id";
             await conn.ExecuteAsync(query, new { Id = id });
-
             // Invalidate caches
             _cache.Remove("flightsCache");
             _cache.Remove($"flight_{id}");

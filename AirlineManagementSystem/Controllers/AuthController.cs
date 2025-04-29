@@ -142,6 +142,8 @@ namespace AirlineManagementSystem.Controllers
             Console.WriteLine($"Generated token: {tokenString.Substring(0, Math.Min(50, tokenString.Length))}...");
             Console.WriteLine($"Token claims: Name={user.Username}, Role={user.Role}");
 
+            HttpContext.Session.SetString("Username",dto.Username);
+
             // Return the JWT token as part of the response
             return Ok(new { token = tokenString });
         }

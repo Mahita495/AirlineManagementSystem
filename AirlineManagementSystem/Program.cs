@@ -37,6 +37,8 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IBookingService, BookingService>();
 // Add this after your HttpClient registration
 builder.Services.AddScoped<UserApiService>();
+builder.Services.AddScoped<IPassengerService, PassengerService>();
+
 
 // Session Support
 builder.Services.AddDistributedMemoryCache();
